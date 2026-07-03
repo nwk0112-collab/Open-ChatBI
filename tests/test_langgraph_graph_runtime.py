@@ -19,16 +19,29 @@ class DummyLLM:
 class FakeSQLGraph:
     """Compiled graph double that preserves dict-like invoke outputs."""
 
-    def __init__(self, expected_messages: str = "show revenue") -> None:
+    def __init__(
+        self,
+        expected_messages: str = "show revenue",
+        expected_visualize: bool = True,
+        include_visualization: bool = True,
+    ) -> None:
         self.expected_messages = expected_messages
+        self.expected_visualize = expected_visualize
+        self.include_visualization = include_visualization
+
+    def _response(self) -> dict:
+        response = {"sql": "SELECT 1", "data": "value\n1"}
+        if self.include_visualization:
+            response["visualization_dsl"] = {"chart_type": "bar"}
+        return response
 
     def invoke(self, payload: dict, config=None) -> dict:
-        assert payload == {"messages": self.expected_messages}
-        return {"sql": "SELECT 1", "data": "value\n1", "visualization_dsl": {"chart_type": "bar"}}
+        assert payload == {"messages": self.expected_messages, "visualize": self.expected_visualize}
+        return self._response()
 
     async def ainvoke(self, payload: dict, config=None) -> dict:
-        assert payload == {"messages": self.expected_messages}
-        return {"sql": "SELECT 1", "data": "value\n1", "visualization_dsl": {"chart_type": "bar"}}
+        assert payload == {"messages": self.expected_messages, "visualize": self.expected_visualize}
+        return self._response()
 
 
 def _patch_agent_graph_dependencies(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -96,6 +109,16 @@ def test_text2sql_nested_invoke_keeps_dict_like_output() -> None:
     assert "Visualization Created: bar chart" in result
 
 
+def test_text2sql_sync_forwards_visualize_false() -> None:
+    tool = get_sql_tools(FakeSQLGraph(expected_visualize=False, include_visualization=False), sync_mode=True)
+
+    result = tool.invoke({"reasoning": "need SQL", "context": "show revenue", "visualize": False})
+
+    assert "SQL Query" in result
+    assert "SELECT 1" in result
+    assert "Visualization Created" not in result
+
+
 @pytest.mark.asyncio
 async def test_text2sql_nested_ainvoke_keeps_dict_like_output() -> None:
     tool = get_sql_tools(FakeSQLGraph(), sync_mode=False)
@@ -105,6 +128,17 @@ async def test_text2sql_nested_ainvoke_keeps_dict_like_output() -> None:
     assert "SQL Query" in result
     assert "SELECT 1" in result
     assert "Visualization Created: bar chart" in result
+
+
+@pytest.mark.asyncio
+async def test_text2sql_async_forwards_visualize_false() -> None:
+    tool = get_sql_tools(FakeSQLGraph(expected_visualize=False, include_visualization=False), sync_mode=False)
+
+    result = await tool.ainvoke({"reasoning": "need SQL", "context": "show revenue", "visualize": False})
+
+    assert "SQL Query" in result
+    assert "SELECT 1" in result
+    assert "Visualization Created" not in result
 
 
 def test_text2sql_context_dict_is_serialized_for_sync_tool() -> None:

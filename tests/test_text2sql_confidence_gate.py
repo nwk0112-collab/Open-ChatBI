@@ -182,6 +182,11 @@ class TestRouteAfterConfidence:
 
         assert route_after_confidence({"human_sql_decision": "approve"}) == "generate_visualization"
 
+    def test_route_approve_with_visualize_false_ends(self):
+        from openchatbi.text2sql.sql_graph import route_after_confidence
+
+        assert route_after_confidence({"human_sql_decision": "approve", "visualize": False}) == "end"
+
     def test_route_reject_goes_to_regenerate(self):
         from openchatbi.text2sql.sql_graph import route_after_confidence
 

@@ -84,6 +84,9 @@ Follow these standard workflows based on the user's request:
 - Use `search_schema` for table/column discovery and `show_schema` for known table details.
 - Do NOT call `text2sql` to explore schema, list tables, find candidate tables, or ask what tables
   contain a metric. `text2sql` is only for concrete data retrieval.
+- For `text2sql`, set `visualize=false` when fetching intermediate data for `timeseries_forecast`,
+  `anomaly_detection`, `adtributor_drilldown`, or `run_python_code`. Use `visualize=true` only when
+  the final deliverable itself should include an interactive chart or the user explicitly asks for visualization.
 - For `adtributor_drilldown`, formatting the data correctly as a 1D melted table via `text2sql` is mandatory.
 - If a specific tool (like `timeseries_forecast` or `anomaly_detection`) is unavailable, use
   `run_python_code` as a fallback if possible, or inform the user about the limitation.

@@ -34,6 +34,7 @@ class SQLGraphState(MessagesState):
     Contains rewritten question, table selection, extracted entities, and generated SQL.
     """
 
+    visualize: bool
     rewrite_question: str
     tables: list[dict[str, Any]]
     info_entities: dict[str, Any]
@@ -54,6 +55,12 @@ class InputState(MessagesState):
     """Input state schema for the main graph."""
 
     pass
+
+
+class SQLInputState(MessagesState):
+    """Input state schema for the SQL generation subgraph."""
+
+    visualize: bool
 
 
 class OutputState(MessagesState):

@@ -1,9 +1,13 @@
 """Tests for streaming event parsing."""
 
 from langchain_core.messages import AIMessage, ToolMessage
-from langgraph.types import Overwrite
 
 from openchatbi.streaming import AgentStreamProcessor, StreamStep
+
+
+class Overwrite:
+    def __init__(self, value):
+        self.value = value
 
 
 def test_use_tool_error_emits_tool_error_step() -> None:
@@ -65,3 +69,11 @@ def test_generic_subagent_node_accepts_overwrite_messages() -> None:
     assert isinstance(events[0], StreamStep)
     assert events[0].kind == "generic"
     assert "Using tool: `search_schema`" in events[0].text
+
+
+def test_empty_visualization_update_emits_no_step() -> None:
+    processor = AgentStreamProcessor()
+
+    events = processor.process((), "updates", {"generate_visualization": {"visualization_dsl": {}}})
+
+    assert events == []

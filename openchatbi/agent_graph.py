@@ -84,6 +84,13 @@ class CallSQLGraphInput(BaseModel):
         - Carry-over From Previous Step: prior SQL/result and the exact delta to apply (optional)
         - Deferred Tasks: remaining stages to ignore for now (optional)""",
     )
+    visualize: bool = Field(
+        default=True,
+        description=(
+            "Whether this Text2SQL call should generate visualization DSL for UI display. "
+            "Set to false for intermediate data retrieval used by downstream analysis tools."
+        ),
+    )
 
 
 # Description for SQL tools
@@ -97,6 +104,7 @@ Important notes:
 - Do not use this tool to explore database schema, list tables, or discover which tables/columns contain data.
   Use search_schema for schema discovery and show_schema for known table details before calling Text2SQL.
 - If user want to change the visualization chart type or style, add the requirement in the question
+- Set visualize=false when the call only fetches data for downstream analysis or when the user explicitly does not want a chart
 - Make sure to provide question in English
 - In staged workflows, pass subtask-scoped context only for this call and keep other stages under Deferred Tasks
 - If this call depends on the previous SQL intent, use Carry-over with an explicit delta instead of resending the whole multi-stage ask
@@ -159,12 +167,15 @@ def get_sql_tools(sql_graph: CompiledStateGraph[Any, None, Any, Any], sync_mode:
         reasoning: str,
         context: str | dict[str, Any] | list[dict[str, Any]] | list[str],
         config: RunnableConfig,
+        visualize: bool = True,
     ) -> str:
         """Sync node function for Text2SQL tool"""
         normalized_context = _normalize_text2sql_context(context)
-        log(f"Call SQL graph (sync) with reasoning: {reasoning}, context: {normalized_context}")
+        log(f"Call SQL graph (sync) with reasoning: {reasoning}, visualize: {visualize}, context: {normalized_context}")
         try:
-            sql_graph_response = sql_graph.invoke({"messages": normalized_context}, config=config)
+            sql_graph_response = sql_graph.invoke(
+                {"messages": normalized_context, "visualize": visualize}, config=config
+            )
             return _format_sql_response(sql_graph_response)
         except GraphInterrupt as e:
             log(f"Sql graph interrupted:\n{repr(e)}")
@@ -178,12 +189,17 @@ def get_sql_tools(sql_graph: CompiledStateGraph[Any, None, Any, Any], sync_mode:
         reasoning: str,
         context: str | dict[str, Any] | list[dict[str, Any]] | list[str],
         config: RunnableConfig,
+        visualize: bool = True,
     ) -> str:
         """Async node function for Text2SQL tool"""
         normalized_context = _normalize_text2sql_context(context)
-        log(f"Call SQL graph (async) with reasoning: {reasoning}, context: {normalized_context}")
+        log(
+            f"Call SQL graph (async) with reasoning: {reasoning}, visualize: {visualize}, context: {normalized_context}"
+        )
         try:
-            sql_graph_response = await sql_graph.ainvoke({"messages": normalized_context}, config=config)
+            sql_graph_response = await sql_graph.ainvoke(
+                {"messages": normalized_context, "visualize": visualize}, config=config
+            )
             return _format_sql_response(sql_graph_response)
         except GraphInterrupt as e:
             log(f"Sql graph interrupted:\n{repr(e)}")

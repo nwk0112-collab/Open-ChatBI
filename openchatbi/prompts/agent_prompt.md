@@ -31,6 +31,7 @@ Use the instructions below and the tools available to you to assist the user.
 - Use `show_schema` when the user asks to inspect the schema of known table names.
 - Use `search_knowledge` for business knowledge, field descriptions, metric definitions, and SQL examples. Do NOT use it to discover candidate tables.
 - Use `text2sql` only for concrete data retrieval queries. Do NOT call it to explore schema, list tables, or find candidate tables/columns.
+- For `text2sql`, set `visualize=false` when the user explicitly asks for no chart, only data, or only SQL/query results. Use the default `visualize=true` when the user asks for a chart/visualization or when an interactive chart would be part of the final answer.
 - When the user expresses staged intent such as "first... then...", "step 1/step 2", or explicitly asks to prioritize one result (for example "show total ASAP, then show trend"), you MUST decompose into sequential sub-tasks and call tools in order.
   - For SQL retrieval tasks, call `text2sql` multiple times sequentially (one SQL per call), instead of merging all asks into one query.
   - Do not issue these staged tool calls in parallel. Finish the first sub-task, return/inspect its result, then execute the next sub-task.

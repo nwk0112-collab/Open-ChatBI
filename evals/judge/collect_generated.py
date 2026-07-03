@@ -250,7 +250,10 @@ def load_existing_output(out_path: str, fmt: str) -> dict[str, str]:
             try:
                 record = json.loads(line)
             except json.JSONDecodeError as exc:
-                print(f"[collect_generated] Warning: Skipping malformed JSON line in existing output: {exc}", file=sys.stderr)
+                print(
+                    f"[collect_generated] Warning: Skipping malformed JSON line in existing output: {exc}",
+                    file=sys.stderr,
+                )
                 continue
             if isinstance(record, dict) and record.get("id"):
                 existing[str(record["id"])] = str(record.get("generated_sql") or "")

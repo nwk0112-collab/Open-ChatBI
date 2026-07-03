@@ -15,7 +15,7 @@ from langgraph.types import Checkpointer, interrupt
 from openchatbi import config
 from openchatbi.catalog import CatalogStore
 from openchatbi.constants import SQL_EXECUTE_TIMEOUT, SQL_SUCCESS
-from openchatbi.graph_state import InputState, SQLGraphState, SQLOutputState
+from openchatbi.graph_state import SQLGraphState, SQLInputState, SQLOutputState
 from openchatbi.llm.llm import get_llm, get_text2sql_llm
 from openchatbi.text2sql.data import get_learned_sql_store
 from openchatbi.text2sql.errors import RecoveryStrategy
@@ -106,14 +106,17 @@ def route_after_confidence(state: SQLGraphState) -> str:
     """Route after the confidence gate based on the human decision.
 
     approve -> visualization; reject -> regenerate; edit -> re-execute the
-    user-edited SQL. Defaults to visualization when no decision is present
-    (gate disabled or score above threshold).
+    user-edited SQL. Approved SQL skips visualization when the caller sets
+    visualize=False. Defaults to visualization when no decision is present
+    (gate disabled or score above threshold) and visualization is not disabled.
     """
     decision = state.get("human_sql_decision", "approve")
     if decision == "reject":
         return "regenerate_sql"
     if decision == "edit":
         return "execute_sql"
+    if state.get("visualize", True) is False:
+        return "end"
     return "generate_visualization"
 
 
@@ -156,7 +159,7 @@ def build_sql_graph(
     )
 
     # Define the SQL generation graph
-    graph = StateGraph(SQLGraphState, input_schema=InputState, output_schema=SQLOutputState)
+    graph = StateGraph(SQLGraphState, input_schema=SQLInputState, output_schema=SQLOutputState)
 
     # Add nodes to the graph
     graph.add_node("search_knowledge", search_tool_node)
@@ -234,6 +237,7 @@ def build_sql_graph(
             "generate_visualization": "generate_visualization",
             "regenerate_sql": "regenerate_sql",
             "execute_sql": "execute_sql",
+            "end": END,
         },
     )
 
