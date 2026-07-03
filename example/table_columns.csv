@@ -2,6 +2,7 @@ db_name,table_name,column_name
 ,Customers,customer_id
 ,Customers,customer_name
 ,Customers,customer_details
+,Customers,state
 ,Invoices,invoice_number
 ,Invoices,invoice_date
 ,Invoices,invoice_details

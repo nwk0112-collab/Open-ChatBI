@@ -2,6 +2,7 @@ column_name,display_name,alias,type,category,tag,description,dimension_table,def
 customer_id,Customer ID,cust_id,INTEGER,identifier,customer,Unique identifier for customers,Customers,
 customer_name,Customer Name,cust_name,VARCHAR(80),attribute,customer,Name of the customer,Customers,
 customer_details,Customer Details,cust_details,VARCHAR(255),attribute,customer,Additional customer information,Customers,
+state,State,cust_state,VARCHAR(2),attribute,customer,US state abbreviation where the customer is located,Customers,
 invoice_number,Invoice Number,inv_num,INTEGER,identifier,financial,Unique invoice identifier,Invoices,
 invoice_date,Invoice Date,inv_date,DATETIME,temporal,financial,Date the invoice was created,Invoices,
 invoice_details,Invoice Details,inv_details,VARCHAR(255),attribute,financial,Additional invoice information,Invoices,

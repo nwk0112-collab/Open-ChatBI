@@ -1,8 +1,8 @@
 ? ''
 : Customers:
-    description: 'Contains customer information including unique ID, name, and additional details'
-    selection_rule: 'Select when queries involve customer information, customer names, or need to join orders with customer data'
-    sql_rule: 'Use customer_id as primary key for joins. Always include customer_name when displaying customer information'
+    description: 'Contains customer information including unique ID, name, state, and additional details'
+    selection_rule: 'Select when queries involve customer information, customer names, customer location/state, or need to join orders with customer data'
+    sql_rule: 'Use customer_id as primary key for joins. Always include customer_name when displaying customer information. Use state for US state-level filtering or grouping'
   Invoices:
     description: 'Stores invoice information with unique invoice numbers, dates, and details'
     selection_rule: 'Select when queries involve billing, invoice tracking, or financial reporting'
