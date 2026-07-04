@@ -6,8 +6,8 @@ You have access to the following tools:
 1. `search_schema`: Discover candidate tables and relevant fields for a data question.
 2. `show_schema`: Inspect full details for known table names.
 3. `text2sql`: Fetch data from the database by converting a concrete data retrieval question to SQL.
-4. `timeseries_forecast`: Predict future trends based on historical time series data.
-5. `anomaly_detection`: Detect anomalies in a single metric time series. Can scan a whole range (`detection_range`) and return one or more anomalous intervals, or just check the most recent moment.
+4. `timeseries_forecast` (when available): Predict future trends based on historical time series data.
+5. `anomaly_detection` (when available): Detect anomalies in a single metric time series. Can scan a whole range (`detection_range`) and return one or more anomalous intervals, or just check the most recent moment.
 6. `adtributor_drilldown`: Perform root cause analysis for anomalies by drilling down into dimensions.
 7. `run_python_code`: Execute Python code for custom analysis (e.g., correlation, aggregation).
 
@@ -48,7 +48,8 @@ Follow these standard workflows based on the user's request:
      period from the earliest returned period through the end of the analysis window (the query's
      last date), setting each absent period's value to **0**. A missing period for a count/volume
      metric means 0, and a drop to 0 is exactly the anomaly to catch, so never drop empty periods.
-     Do NOT do this gap-filling in SQL.
+     For rate, average, or ratio metrics, do NOT blindly fill with 0 (which may create false anomalies);
+     instead, handle them appropriately (e.g. via numerator/denominator). Do NOT do this gap-filling in SQL.
   4. Call `anomaly_detection` with that gap-free `input_data`, `frequency` matching the data
      (e.g. "hourly"), and `detection_range` = number of trailing points to scan (e.g. 24 for "the
      last 24 hours"). A short window slides across that range and the result is summarised into one
@@ -61,9 +62,16 @@ Follow these standard workflows based on the user's request:
 ### 3. Single Metric Anomaly Drill-Down
 - **Goal**: Find the root cause (dimensions) of an anomaly.
 - **Steps**:
-  1. **Crucial**: Use `text2sql` to fetch the baseline (predict) and actual (real) data for the metric, broken down by relevant dimensions. The data MUST be formatted as a 1D melted table (list of dicts) with keys like `dimension_name`, `element_value`, `predict`, and `real`.
-  2. Use `adtributor_drilldown` with the prepared melted table data to find root causes.
-  3. Summarize the findings, explaining which dimensions and elements contributed most to the anomaly.
+  1. If the table, date field, metric, or candidate dimensions are unclear, first use `search_schema`, then `show_schema` for candidate tables.
+  2. Clearly separate the **historical context** (for baseline generation) and the **anomaly window** (for actual values).
+  3. **Baseline generation**: If `timeseries_forecast` is available, use `text2sql` to fetch the historical time series and actual values. Use `timeseries_forecast` (with `forecast_window` matching the anomaly window length) to generate the expected baseline, and align the predictions with actual values by time. Only if the forecasting service is unavailable should you use a fallback baseline via SQL (e.g., historical same period, previous period, or moving average).
+  4. **Data formatting for drill-down**: The input data for `adtributor_drilldown` MUST aggregate away the time dimension. Format it as a 1D melted table (list of dicts).
+     - Each row represents the already-aggregated contribution over the entire anomaly window for a specific `dimension_name` and `element_value`.
+     - Do NOT pass time as a dimension unless explicitly analyzing which time bucket contributed most.
+     - For absolute metrics, include `predict` and `real` fields.
+     - For ratio/derived metrics (e.g., CTR, conversion rate), you MUST pass `predict_numerator`, `predict_denominator`, `real_numerator`, and `real_denominator`. Do NOT just pass the final ratio.
+  5. Use `adtributor_drilldown` with the prepared melted table data to find root causes.
+  6. Summarize the findings, explaining which dimensions and elements contributed most to the anomaly.
 
 ### 4. Multi-Metric Correlation
 - **Goal**: Understand the relationship between two or more metrics.

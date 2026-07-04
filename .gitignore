@@ -209,7 +209,7 @@ __marimo__/
 # project spec
 openchatbi/config.yaml
 memory.db
-checkpoints.db
+checkpoints.*
 data
 hf_model
 timeseries_forecasting/hf_model

@@ -356,10 +356,9 @@ OpenChatBI is built using a modular architecture with clear separation of concer
 
 ## Technology Stack
 
-- **Frameworks**: LangGraph, LangChain, FastAPI, Gradio/Streamlit
-- **Large Language Models**: Azure OpenAI (GPT-4), Anthropic Claude, OpenAI GPT models
+- **Frameworks**: LangGraph, LangChain, DeepAgents, FastAPI, Gradio/Streamlit
 - **Text Retrieval**: Vector-based (with embedding models) or BM25-based (fallback without embeddings)
-- **Databases**: Presto, Trino, MySQL with SQLAlchemy support
+- **Databases**: SQLAlchemy-backed connectors for data warehouses and RDS/OLTP databases
 - **Code Execution**: Local Python, RestrictedPython, Docker containerization
 - **Development**: Python 3.11+, with modern tooling (Black, Ruff, MyPy, Pytest)
 - **Storage**: SQLite for conversation checkpointing, file system catalog storage
