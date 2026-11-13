@@ -43,14 +43,14 @@ tests/
 
 ### Prerequisites
 
-Ensure you have the development dependencies installed:
+From the repository root, install the test dependencies (including `pytest-cov`, which the default pytest configuration requires):
 
 ```bash
 # Using uv (recommended)
-uv sync --group dev
+uv sync --extra test
 
 # Or using pip
-pip install -e ".[dev]"
+pip install -e ".[test]"
 ```
 
 ### Basic Test Execution
@@ -85,7 +85,7 @@ open htmlcov/index.html
 ### Test Categories
 
 ```bash
-# Run only fast unit tests (exclude slow integration tests)
+# Exclude tests explicitly marked slow (this can still include integration tests)
 uv run pytest -m "not slow"
 
 # Run tests for specific components
@@ -253,16 +253,15 @@ mock_catalog.search_tables.return_value = [
 
 ### GitHub Actions
 
-Tests run automatically on:
-- Pull requests
-- Pushes to main branch
-- Scheduled runs (daily)
+The [CI workflow](../.github/workflows/ci.yml) runs Black and pytest for pull requests targeting `main`. It does **not** currently trigger on direct pushes or a daily schedule.
+
+The separate [RunLedger workflow](../.github/workflows/runledger.yml) runs replay evaluations on pull requests targeting `main` or manual dispatch. Its LLM-as-Judge job runs only on manual dispatch and is non-gating. These evaluations do not replace the pytest suite.
+
+The [documentation workflow](../.github/workflows/docs.yml) builds documentation on pushes and pull requests to `main`; a successful documentation build is not evidence that the application tests passed.
 
 ### Test Matrix
 
-Tests run against multiple configurations:
-- Python versions: 3.11+
-- Dependencies: Minimum and latest versions
+The CI matrix currently uses Python **3.11 and 3.12** and installs dependencies with `uv sync --all-extras`. It does not define separate minimum/latest dependency jobs.
 
 ## Debugging Tests
 
